@@ -15,19 +15,36 @@ struct DotInversion: View {
     // Rotation
     @State var dotRotation: Double = 0.0
     
+    // MARK: Avoid multiple taps
+    @State var isAnimating: Bool = false
+    
     var body: some View {
         ZStack {
             
             ZStack {
                 // Changing color based on state
                 (dotState == .normal ? Color("brightOrange") : Color("darkGrey"))
+                
+                if dotState == .normal {
+                    MinimizedView()
+                } else {
+                    ExpandedView()
+                }
             }
             .animation(.none, value: dotState)
             
             Rectangle()
                 .fill(dotState != .normal ? Color("brightOrange") : Color("darkGrey"))
                 .overlay(
-                    ExpandedView()
+                    ZStack {
+                        // MARK: Put view in reverse to look like masking effect
+                        // Changing views based on state
+                        if dotState != .normal {
+                            MinimizedView()
+                        } else {
+                            ExpandedView()
+                        }
+                    }
                 )
                 .animation(.none, value: dotState)
             // Masking view with circle to create dot inversion animation
@@ -37,7 +54,7 @@ struct DotInversion: View {
                         // While increasing the scale the content will be visible
                             .frame(width: 100, height: 100)
                             .scaleEffect(dotScale)
-                            .rotation3DEffect(.init(degrees: dotRotation), axis: (x: 0, y: 1, z: 0), anchorZ: 10, perspective: 1)
+                            .rotation3DEffect(.init(degrees: dotRotation), axis: (x: 0, y: 1, z: 0), anchorZ: dotState == .flipped ? -10 : 10, perspective: 1)
                             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                             .offset(y: -60)
                     }
@@ -46,17 +63,37 @@ struct DotInversion: View {
             Circle()
                 .foregroundColor(Color.black.opacity(0.01))
                 .frame(width: 100, height: 100)
+                // Arrow
+                .overlay(
+                    Image(systemName: "chevron.right")
+                        .font(.title)
+                        .foregroundColor(Color.white)
+                    // Opacity Animation
+                        .opacity(isAnimating ? 0 : 1)
+                        .animation(.easeInOut(duration: 0.4), value: isAnimating)
+                )
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                 .onTapGesture(perform: {
+                    if isAnimating { return }
+                    
+                    isAnimating = true
+                    
                     if dotState == .flipped {
+                        // Reverse effect
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.725) {
+                            withAnimation(.linear(duration: 0.7)) {
+                                dotScale = 1
+                                dotState = .normal
+                            }
+                        }
                         withAnimation(.linear(duration: 1.5)) {
-                            dotScale = 1
-                            dotState = .normal
+                            dotRotation = 0
+                            dotScale = 8
                         }
                     } else {
                         // At duration 0.75, reset scale to 1 to create inversion effect
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.725) {
-                            withAnimation(.linear(duration: 1.5)) {
+                            withAnimation(.linear(duration: 0.7)) {
                                 dotScale = 1
                                 dotState = .flipped
                             }
@@ -65,6 +102,10 @@ struct DotInversion: View {
                             dotRotation = -180
                             dotScale = 8
                         }
+                    }
+                    // After 1.4s, reset isAnimating State
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                        isAnimating = false
                     }
                 })
                 .offset(y: -60)
