@@ -1,5 +1,5 @@
 //
-//  ContentView.swift
+//  LandingView.swift
 //  Dot_Inversion
 //
 //  Created by Stanley Pan on 2022/02/01.
@@ -7,15 +7,15 @@
 
 import SwiftUI
 
-struct ContentView: View {
+struct LandingView: View {
+    
     var body: some View {
-//        LandingView()
-        DotInversion()
+        Text("Hello")
     }
 }
 
-struct ContentView_Previews: PreviewProvider {
+struct LandingView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView()
+        LandingView()
     }
 }
