@@ -19,7 +19,7 @@ struct DotInversion: View {
     @State var isAnimating: Bool = false
     
     // Current and Next Index
-    @State var currentIndex: Int = 0
+    @Binding var currentIndex: Int
     @State var nextIndex: Int = 1
     
     
@@ -57,25 +57,25 @@ struct DotInversion: View {
                     GeometryReader { proxy in
                         Circle()
                         // While increasing the scale the content will be visible
-                            .frame(width: 100, height: 100)
+                            .frame(width: 80, height: 80)
                             .scaleEffect(dotScale)
                             .rotation3DEffect(.init(degrees: dotRotation), axis: (x: 0, y: 1, z: 0), anchorZ: dotState == .flipped ? -10 : 10, perspective: 1)
                             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-                            .offset(y: -60)
+                            .offset(y: -(getSafeArea().bottom + 20))
                     }
                 )
             // For Tap Gesture
             Circle()
                 .foregroundColor(Color.black.opacity(0.01))
-                .frame(width: 100, height: 100)
+                .frame(width: 80, height: 80)
                 // Arrow
                 .overlay(
                     Image(systemName: "chevron.right")
                         .font(.title)
                         .foregroundColor(Color.white)
                     // Opacity Animation
-                        .opacity(isAnimating ? 0 : 1)
-                        .animation(.easeInOut(duration: 0.4), value: isAnimating)
+                        .opacity(dotRotation == -180 ? 0 : 1)
+                        .animation(.easeInOut, value: dotRotation)
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                 .onTapGesture(perform: {
@@ -91,8 +91,8 @@ struct DotInversion: View {
                     // Modifying for single tap
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.725) {
                         // Updating animation
-                        withAnimation(.easeInOut(duration: 0.71)) {
-                            dotState = .normal
+                        withAnimation(.easeInOut(duration: 0.7)) {
+                            dotState = .flipped
                         }
                     }
                     
@@ -119,7 +119,7 @@ struct DotInversion: View {
                         }
                     }
                 })
-                .offset(y: -60)
+                .offset(y: -(getSafeArea().bottom + 20))
         }
         .ignoresSafeArea()
     }
@@ -129,7 +129,7 @@ struct DotInversion: View {
         VStack {
             Image(tab.image)
                 .resizable()
-                .aspectRatio(contentMode: .fill)
+                .aspectRatio(contentMode: .fit)
                 .padding(40)
             
             VStack(alignment: .leading, spacing: 0) {
@@ -142,7 +142,7 @@ struct DotInversion: View {
                 Text(tab.description)
                     .fontWeight(.semibold)
                     .padding(.top)
-                    .frame(width: getScreenSize().width, alignment: .leading)
+                    .frame(width: getScreenSize().width - 100, alignment: .leading)
                 
             }
             .foregroundColor(Color.white)
@@ -152,35 +152,23 @@ struct DotInversion: View {
         }
     }
     
-    // Infinite loop
+    // Infinite loop effect
     func getNextIndex() -> Int {
         let index = (nextIndex + 1) > (tabs.count - 1) ? 0 : (nextIndex + 1)
         return index
     }
     
-    // Expand and Minimize Views
+    // MARK: Expand and Minimize Views
     @ViewBuilder
     func ExpandedView() -> some View {
-        VStack(spacing: 10) {
-            Image(systemName: "ipad")
-                .font(.system(size: 148))
-            
-            Text("iPad")
-                .font(.system(size: 38).bold())
-        }
-        .foregroundColor(Color.white)
+        IntroView(tab: tabs[nextIndex])
+            .offset(y: -50)
     }
     
     @ViewBuilder
     func MinimizedView() -> some View {
-        VStack(spacing: 10) {
-            Image(systemName: "applewatch")
-                .font(.system(size: 148))
-            
-            Text("Apple Watch")
-                .font(.system(size: 38).bold())
-        }
-        .foregroundColor(Color.white)
+        IntroView(tab: tabs[currentIndex])
+            .offset(y: -50)
     }
 }
 
