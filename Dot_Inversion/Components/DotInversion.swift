@@ -102,38 +102,9 @@ struct DotInversion: View {
                             dotScale = 1
                         }
                     }
-//                    withAnimation(.linear(duration: 1.5)) {
-//                        dotRotation = 0
-//                        dotScale = 8
-//                    }
                     
-//                    if dotState == .flipped {
-//                        // Reverse effect
-//                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.725) {
-//                            withAnimation(.linear(duration: 0.7)) {
-//                                dotScale = 1
-//                                dotState = .normal
-//                            }
-//                        }
-//                        withAnimation(.linear(duration: 1.5)) {
-//                            dotRotation = 0
-//                            dotScale = 8
-//                        }
-//                    } else {
-//                        // At duration 0.75, reset scale to 1 to create inversion effect
-//                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.725) {
-//                            withAnimation(.linear(duration: 0.7)) {
-//                                dotScale = 1
-//                                dotState = .flipped
-//                            }
-//                        }
-//                        withAnimation(.linear(duration: 1.5)) {
-//                            dotRotation = -180
-//                            dotScale = 8
-//                        }
-//                    }
                     // After 1.4s, reset isAnimating State
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
                         // Resetting to default
                         withAnimation(.easeInOut(duration: 0.3)) {
                             dotRotation = 0
@@ -151,6 +122,34 @@ struct DotInversion: View {
                 .offset(y: -60)
         }
         .ignoresSafeArea()
+    }
+    
+    @ViewBuilder
+    func IntroView(tab: Tab) -> some View {
+        VStack {
+            Image(tab.image)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .padding(40)
+            
+            VStack(alignment: .leading, spacing: 0) {
+                Text(tab.title)
+                    .font(.system(size: 45))
+                
+                Text(tab.subTitle)
+                    .font(.system(size: 50, weight: .bold))
+                
+                Text(tab.description)
+                    .fontWeight(.semibold)
+                    .padding(.top)
+                    .frame(width: getScreenSize().width, alignment: .leading)
+                
+            }
+            .foregroundColor(Color.white)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.leading, 20)
+            .padding([.trailing, .top])
+        }
     }
     
     // Infinite loop
@@ -195,4 +194,19 @@ struct DotInversion_Previews: PreviewProvider {
 enum DotState {
     case normal
     case flipped
+}
+
+// MARK: View Extension for Screen Rect
+extension View {
+    func getScreenSize() -> CGRect {
+        return UIScreen.main.bounds
+    }
+    
+    func getSafeArea() -> UIEdgeInsets {
+        guard let screen = UIApplication.shared.connectedScenes.first as? UIWindowScene else { return .zero }
+        
+        guard let safeArea = screen.windows.first?.safeAreaInsets else { return .zero }
+        
+        return safeArea
+    }
 }
