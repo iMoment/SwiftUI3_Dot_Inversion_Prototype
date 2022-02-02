@@ -18,12 +18,17 @@ struct DotInversion: View {
     // MARK: Avoid multiple taps
     @State var isAnimating: Bool = false
     
+    // Current and Next Index
+    @State var currentIndex: Int = 0
+    @State var nextIndex: Int = 1
+    
+    
     var body: some View {
         ZStack {
             
             ZStack {
                 // Changing color based on state
-                (dotState == .normal ? Color("brightOrange") : Color("darkGrey"))
+                (dotState == .normal ? tabs[currentIndex].color : tabs[nextIndex].color)
                 
                 if dotState == .normal {
                     MinimizedView()
@@ -34,7 +39,7 @@ struct DotInversion: View {
             .animation(.none, value: dotState)
             
             Rectangle()
-                .fill(dotState != .normal ? Color("brightOrange") : Color("darkGrey"))
+                .fill(dotState != .normal ? tabs[currentIndex].color : tabs[nextIndex].color)
                 .overlay(
                     ZStack {
                         // MARK: Put view in reverse to look like masking effect
@@ -78,40 +83,82 @@ struct DotInversion: View {
                     
                     isAnimating = true
                     
-                    if dotState == .flipped {
-                        // Reverse effect
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.725) {
-                            withAnimation(.linear(duration: 0.7)) {
-                                dotScale = 1
-                                dotState = .normal
-                            }
-                        }
-                        withAnimation(.linear(duration: 1.5)) {
-                            dotRotation = 0
-                            dotScale = 8
-                        }
-                    } else {
-                        // At duration 0.75, reset scale to 1 to create inversion effect
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.725) {
-                            withAnimation(.linear(duration: 0.7)) {
-                                dotScale = 1
-                                dotState = .flipped
-                            }
-                        }
-                        withAnimation(.linear(duration: 1.5)) {
-                            dotRotation = -180
-                            dotScale = 8
+                    withAnimation(.linear(duration: 1.5)) {
+                        dotRotation = -180
+                        dotScale = 8
+                    }
+                    
+                    // Modifying for single tap
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.725) {
+                        // Updating animation
+                        withAnimation(.easeInOut(duration: 0.71)) {
+                            dotState = .normal
                         }
                     }
+                    
+                    // Animation Reversal
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            dotScale = 1
+                        }
+                    }
+//                    withAnimation(.linear(duration: 1.5)) {
+//                        dotRotation = 0
+//                        dotScale = 8
+//                    }
+                    
+//                    if dotState == .flipped {
+//                        // Reverse effect
+//                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.725) {
+//                            withAnimation(.linear(duration: 0.7)) {
+//                                dotScale = 1
+//                                dotState = .normal
+//                            }
+//                        }
+//                        withAnimation(.linear(duration: 1.5)) {
+//                            dotRotation = 0
+//                            dotScale = 8
+//                        }
+//                    } else {
+//                        // At duration 0.75, reset scale to 1 to create inversion effect
+//                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.725) {
+//                            withAnimation(.linear(duration: 0.7)) {
+//                                dotScale = 1
+//                                dotState = .flipped
+//                            }
+//                        }
+//                        withAnimation(.linear(duration: 1.5)) {
+//                            dotRotation = -180
+//                            dotScale = 8
+//                        }
+//                    }
                     // After 1.4s, reset isAnimating State
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                        isAnimating = false
+                        // Resetting to default
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            dotRotation = 0
+                            dotState = .normal
+                            
+                            // Updating index, currentIndex is next
+                            currentIndex = nextIndex
+                            nextIndex = getNextIndex()
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            isAnimating = false
+                        }
                     }
                 })
                 .offset(y: -60)
         }
         .ignoresSafeArea()
     }
+    
+    // Infinite loop
+    func getNextIndex() -> Int {
+        let index = (nextIndex + 1) > (tabs.count - 1) ? 0 : (nextIndex + 1)
+        return index
+    }
+    
     // Expand and Minimize Views
     @ViewBuilder
     func ExpandedView() -> some View {
